@@ -1,28 +1,38 @@
+from enum import Enum
+
 from dictionaries import Languages, dictionaries
 from solver.solver import solve
 
+class Modes(Enum):
+    PLAY = "play"
+    EVAL = "eval"
+
+MODE_LIST = [mode.value for mode in Modes]
 LANGUAGE_LIST = [language.value for language in Languages]
-WORD_LENGTH = 5
 
 
-def pick_language() -> str:
-    print("Choose language:")
-    for i, language in enumerate(LANGUAGE_LIST):
-        print(f"\t [{i}] {language}")
+def pick(label, value_list):
+    print(f"Choose {label}:")
+    for i, value in enumerate(value_list):
+        print(f"\t [{i}] {value}")
 
-    language_index = len(LANGUAGE_LIST)
-    while language_index < 0 or language_index >= len(LANGUAGE_LIST):
-        print("You choice: ", end='')
-        language_index = int(input())
+    value_index = len(value_list)
+    while value_index < 0 or value_index >= len(value_list):
+        print("Your choice: ", end='')
+        value_index = int(input())
 
-    language = LANGUAGE_LIST[language_index]
-    print(f"You chose: {language}")
+    value = value_list[value_index]
+    print(f"You chose: {value}\r\n")
 
-    return language
+    return value
 
 
 if __name__ == "__main__":
     while True:
-        language = pick_language()
-        solve(dictionaries[language].copy())
+        mode = pick("mode", MODE_LIST)
+        language = pick("language", LANGUAGE_LIST)
+
+        if mode == Modes.PLAY.value:
+            solve(dictionaries[language].copy())
+
         print("")
