@@ -1,6 +1,16 @@
+import os
+import sys
 from collections import defaultdict
+import statistics
 
-from wordle.game import LetterStates, WORD_LENGTH, ALPHABET
+from wordle.game import LetterStates, WORD_LENGTH, ALPHABET, get_result
+
+
+def set_print(enabled):
+    if enabled:
+        sys.stdout = sys.__stdout__
+    else:
+        sys.stdout = open(os.devnull, 'w')
 
 
 def compute_letter_frequencies(dictionary):
@@ -84,7 +94,7 @@ def update_dictionary(dictionary, guesses, results):
     return new_dictionary
 
 
-def solve(dictionary):
+def solve(dictionary, result_getter=None):
     print(f"Dictionary contains {len(dictionary)} words")
 
     guesses = []
@@ -96,10 +106,33 @@ def solve(dictionary):
 
         print(f"[{LetterStates.ABSENT}]: Absent, [{LetterStates.PRESENT}]: Present, [{LetterStates.CORRECT}]: Correct")
         print("Input result: ", end="")
-        results.append([int(res) for res in input()])
+        if result_getter:
+            result = result_getter(guess)
+            print(result)
+        else:
+            result = [int(res) for res in input()]
+
+        results.append(result)
 
         dictionary = update_dictionary(dictionary, guesses, results)
 
     print(f"\r\nYou won in {len(guesses)} guesses")
     for guess in guesses:
         print(f"\t{guess}")
+
+    return len(guesses)
+
+
+def evaluate(dictionary):
+    print(f"Evaluating {len(dictionary)} words")
+
+    set_print(False)
+    attempts = []
+    for i, target_word in enumerate(dictionary):
+        attempts.append(solve(dictionary.copy(), result_getter=lambda guess: get_result(target_word, guess)))
+
+    set_print(True)
+    print(f"Average guesses: {statistics.mean(attempts)}")
+    print(f"Median guesses: {statistics.median(attempts)}")
+    print(f"Min guesses: {min(attempts)}")
+    print(f"Max guesses: {max(attempts)}")

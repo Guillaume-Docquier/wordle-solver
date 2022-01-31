@@ -1,11 +1,13 @@
 from enum import Enum
 
 from dictionaries import Languages, dictionaries
-from solver.solver import solve
+from solver.solver import evaluate, solve
+
 
 class Modes(Enum):
     PLAY = "play"
     EVAL = "eval"
+
 
 MODE_LIST = [mode.value for mode in Modes]
 LANGUAGE_LIST = [language.value for language in Languages]
@@ -31,8 +33,11 @@ if __name__ == "__main__":
     while True:
         mode = pick("mode", MODE_LIST)
         language = pick("language", LANGUAGE_LIST)
+        dictionary = dictionaries[language].copy()
 
         if mode == Modes.PLAY.value:
-            solve(dictionaries[language].copy())
+            solve(dictionary)
+        elif mode == Modes.EVAL.value:
+            evaluate(dictionary)
 
         print("")

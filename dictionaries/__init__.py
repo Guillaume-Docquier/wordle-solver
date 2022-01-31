@@ -13,5 +13,7 @@ class Languages(Enum):
 dictionaries = {
     Languages.ENGLISH.value: english_words,
     Languages.FRENCH.value: french_words,
-    Languages.SPANISH.value: spanish_words,
+
+    # 92 words contain 5 characters and end with '-'. I don't know what this is.
+    Languages.SPANISH.value: [word for word in spanish_words if "-" not in word],
 }
