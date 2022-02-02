@@ -10,16 +10,16 @@ The dictionaries were taken from the source code of popular wordle sites
 - Spanish: https://wordle.danielfrg.com/  
 
 # English (12972 words)
-| Commit | Average | Median | Max | First guess |
-|--------|-------------------|-------|------|------|
-|[8487a94](https://github.com/Guillaume-Docquier/wordle-solver/commit/8487a94849ceee206ca339ea8f86aababde572b6)|4.83|4|16|aeros|
+| Commit | Success rate | Average | Median | Max | First guess |
+|--------|--------------|---------|--------|-----|-------------|
+|[8487a94](https://github.com/Guillaume-Docquier/wordle-solver/commit/8487a94849ceee206ca339ea8f86aababde572b6)|87.39%|4.83|4|16|aeros|
 
 # French (6025 words)
-| Commit | Average | Median | Max | First guess |
-|--------|-------------------|-------|------|------|
-|[8487a94](https://github.com/Guillaume-Docquier/wordle-solver/commit/8487a94849ceee206ca339ea8f86aababde572b6)|4.28|4|13|raies|
+| Commit | Success rate | Average | Median | Max | First guess |
+|--------|--------------|---------|--------|-----|-------------|
+|[8487a94](https://github.com/Guillaume-Docquier/wordle-solver/commit/8487a94849ceee206ca339ea8f86aababde572b6)|93.16%|4.28|4|13|raies|
 
 # Spanish (11094 words)
-| Commit | Average | Median | Max | First guess |
-|--------|-------------------|-------|------|------|
-|[8487a94](https://github.com/Guillaume-Docquier/wordle-solver/commit/8487a94849ceee206ca339ea8f86aababde572b6)|4.88|4|14|orase|
+| Commit | Success rate | Average | Median | Max | First guess |
+|--------|--------------|---------|--------|-----|-------------|
+|[8487a94](https://github.com/Guillaume-Docquier/wordle-solver/commit/8487a94849ceee206ca339ea8f86aababde572b6)|85.17%|4.88|5|14|orase|

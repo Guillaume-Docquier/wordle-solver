@@ -63,16 +63,16 @@ def update_dictionary(dictionary, guesses, results):
         if guess in dictionary:
             dictionary.remove(guess)
 
-        for i, (letter, res) in enumerate(zip(guess, result)):
-            if res == LetterStates.ABSENT:
+        for i, (letter, state) in enumerate(zip(guess, result)):
+            if state == LetterStates.ABSENT:
                 for j in range(WORD_LENGTH):
                     if letter in possible_letters[j]:
                         possible_letters[j].remove(letter)
-            elif res == LetterStates.PRESENT:
+            elif state == LetterStates.PRESENT:
                 if letter in possible_letters[i]:
                     possible_letters[i].remove(letter)
                 must_contain.append(letter)
-            elif res == LetterStates.CORRECT:
+            elif state == LetterStates.CORRECT:
                 possible_letters[i] = [letter]
 
     new_dictionary = []
@@ -132,7 +132,8 @@ def evaluate(dictionary):
         attempts.append(solve(dictionary.copy(), result_getter=lambda guess: get_result(target_word, guess)))
 
     set_print(True)
+    success_rate = len([attempt for attempt in attempts if attempt <= 6]) / len(attempts)
+    print(f"Success rate: {success_rate * 100:.2f}%")
     print(f"Average guesses: {statistics.mean(attempts)}")
     print(f"Median guesses: {statistics.median(attempts)}")
-    print(f"Min guesses: {min(attempts)}")
     print(f"Max guesses: {max(attempts)}")
