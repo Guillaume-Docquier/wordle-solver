@@ -57,23 +57,30 @@ def get_guess(dictionary):
 
 
 def update_dictionary(dictionary, guesses, results):
-    possible_letters = defaultdict(lambda: ALPHABET.copy())
-    must_contain = []
+    possible_letters = [{letter: True for letter in ALPHABET} for _ in range(WORD_LENGTH)]
+    must_contain = set()
     for guess, result in zip(guesses, results):
         if guess in dictionary:
             dictionary.remove(guess)
 
+        letter_was_handled = defaultdict(lambda: False)
         for i, (letter, state) in enumerate(zip(guess, result)):
             if state == LetterStates.ABSENT:
-                for j in range(WORD_LENGTH):
-                    if letter in possible_letters[j]:
-                        possible_letters[j].remove(letter)
-            elif state == LetterStates.PRESENT:
-                if letter in possible_letters[i]:
-                    possible_letters[i].remove(letter)
-                must_contain.append(letter)
+                continue
+
+            if state == LetterStates.PRESENT:
+                possible_letters[i].pop(letter, None)
             elif state == LetterStates.CORRECT:
-                possible_letters[i] = [letter]
+                possible_letters[i] = {letter: True}
+
+            must_contain.add(letter)
+            letter_was_handled[letter] = True
+
+        # Absent only means absent if there's no other hints about the letter
+        for i, (letter, state) in enumerate(zip(guess, result)):
+            if state == LetterStates.ABSENT and not letter_was_handled[letter]:
+                for j in range(len(possible_letters)):
+                    possible_letters[j].pop(letter, None)
 
     new_dictionary = []
     for word in dictionary:
@@ -81,10 +88,13 @@ def update_dictionary(dictionary, guesses, results):
         for letter in must_contain:
             if letter not in word:
                 valid_word = False
+                break
 
-        for i, letter in enumerate(word):
-            if word[i] not in possible_letters[i]:
-                valid_word = False
+        if valid_word:
+            for i, letter in enumerate(word):
+                if word[i] not in possible_letters[i]:
+                    valid_word = False
+                    break
 
         if valid_word:
             new_dictionary.append(word)
@@ -130,10 +140,18 @@ def evaluate(dictionary):
     attempts = []
     for i, target_word in enumerate(dictionary):
         attempts.append(solve(dictionary.copy(), result_getter=lambda guess: get_result(target_word, guess)))
-
     set_print(True)
-    success_rate = len([attempt for attempt in attempts if attempt <= 6]) / len(attempts)
-    print(f"Success rate: {success_rate * 100:.2f}%")
-    print(f"Average guesses: {statistics.mean(attempts)}")
-    print(f"Median guesses: {statistics.median(attempts)}")
-    print(f"Max guesses: {max(attempts)}")
+
+    success_rate = len([attempt for attempt in attempts if attempt <= 6]) / len(attempts) * 100
+    avg = statistics.mean(attempts)
+    median = statistics.median(attempts)
+    max_guesses = max(attempts)
+    first_guess = get_guess(dictionary)
+
+    print(f"Success rate: {success_rate:.2f}%")
+    print(f"Average guesses: {avg:.2f}")
+    print(f"Median guesses: {median}")
+    print(f"Max guesses: {max_guesses}")
+    print(f"First guess: {first_guess}")
+
+    print(f"|[sha](url)|{success_rate:.2f}%|{avg:.2f}|{median:.0f}|{max_guesses}|{first_guess}|")
