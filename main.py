@@ -36,6 +36,7 @@ if __name__ == "__main__":
         dictionary = dictionaries[language].copy()
 
         if mode == Modes.PLAY.value:
+            print(dictionary[3467 - 1])
             solve(dictionary)
         elif mode == Modes.EVAL.value:
             evaluate(dictionary)

@@ -1,19 +1,21 @@
 import os
 import sys
-from collections import defaultdict
 import statistics
+import time
+from collections import defaultdict
+from typing import Callable
 
 from wordle.game import LetterStates, WORD_LENGTH, ALPHABET, get_result
 
 
-def set_print(enabled):
+def set_print(enabled: bool) -> None:
     if enabled:
         sys.stdout = sys.__stdout__
     else:
         sys.stdout = open(os.devnull, 'w')
 
 
-def compute_letter_frequencies(dictionary):
+def compute_letter_frequencies(dictionary: list[str]) -> dict[str, float]:
     word_count = len(dictionary)
     letter_counts = defaultdict(lambda: 0)
 
@@ -27,7 +29,7 @@ def compute_letter_frequencies(dictionary):
     return letter_frequencies
 
 
-def compute_word_scores(dictionary, letter_frequencies):
+def compute_word_scores(dictionary: list[str], letter_frequencies: dict[str, float]):
     # Compute score based on sum of unique letter probabilities
     word_scores = defaultdict(lambda: 0)
     for word in dictionary:
@@ -42,7 +44,7 @@ def compute_word_scores(dictionary, letter_frequencies):
     return word_scores
 
 
-def get_guess(dictionary):
+def get_guess(dictionary: list[str]) -> str:
     letter_frequencies = compute_letter_frequencies(dictionary)
     print("Letter frequencies")
     for [letter, frequency] in letter_frequencies.items():
@@ -56,29 +58,38 @@ def get_guess(dictionary):
     return word_scores[0][0]
 
 
-def update_dictionary(dictionary, guesses, results):
+def update_dictionary(dictionary: list[str], guess: str, result: str) -> list[str]:
     possible_letters = [{letter: True for letter in ALPHABET} for _ in range(WORD_LENGTH)]
     must_contain = set()
-    for guess, result in zip(guesses, results):
-        if guess in dictionary:
-            dictionary.remove(guess)
+    present_letters = defaultdict(lambda: False)
+    correct_letters = defaultdict(lambda: {"correct": False, "positions": []})
+    for i, (letter, state) in enumerate(zip(guess, result)):
+        if state == LetterStates.ABSENT:
+            continue
 
-        letter_was_handled = defaultdict(lambda: False)
-        for i, (letter, state) in enumerate(zip(guess, result)):
-            if state == LetterStates.ABSENT:
-                continue
+        if state == LetterStates.PRESENT:
+            possible_letters[i].pop(letter, None)
+            present_letters[letter] = True
+        elif state == LetterStates.CORRECT:
+            possible_letters[i] = {letter: True}
+            correct_letters[letter]["correct"] = True
+            correct_letters[letter]["positions"].append(i)
 
-            if state == LetterStates.PRESENT:
+        must_contain.add(letter)
+
+    # Absent is more complicated than you think
+    for i, (letter, state) in enumerate(zip(guess, result)):
+        if state == LetterStates.ABSENT:
+            # Yellow and black (whether or not with green), not where the black is
+            if present_letters[letter]:
                 possible_letters[i].pop(letter, None)
-            elif state == LetterStates.CORRECT:
-                possible_letters[i] = {letter: True}
-
-            must_contain.add(letter)
-            letter_was_handled[letter] = True
-
-        # Absent only means absent if there's no other hints about the letter
-        for i, (letter, state) in enumerate(zip(guess, result)):
-            if state == LetterStates.ABSENT and not letter_was_handled[letter]:
+            # Green and black, not anywhere in word except where the green is
+            elif correct_letters[letter]["correct"]:
+                for j in range(len(possible_letters)):
+                    if j not in correct_letters[letter]["positions"]:
+                        possible_letters[j].pop(letter, None)
+            # Just a black, not anywhere in word
+            else:
                 for j in range(len(possible_letters)):
                     possible_letters[j].pop(letter, None)
 
@@ -104,7 +115,7 @@ def update_dictionary(dictionary, guesses, results):
     return new_dictionary
 
 
-def solve(dictionary, result_getter=None):
+def solve(dictionary: list[str], result_getter: Callable[[str], str] = None) -> int:
     print(f"Dictionary contains {len(dictionary)} words")
 
     guesses = []
@@ -124,7 +135,7 @@ def solve(dictionary, result_getter=None):
 
         results.append(result)
 
-        dictionary = update_dictionary(dictionary, guesses, results)
+        dictionary = update_dictionary(dictionary, guesses[-1], results[-1])
 
     print(f"\r\nYou won in {len(guesses)} guesses")
     for guess in guesses:
@@ -133,20 +144,27 @@ def solve(dictionary, result_getter=None):
     return len(guesses)
 
 
-def evaluate(dictionary):
+def evaluate(dictionary: list[str]) -> None:
     print(f"Evaluating {len(dictionary)} words")
 
-    set_print(False)
     attempts = []
+    start = time.time()
     for i, target_word in enumerate(dictionary):
+        print(f"{i + 1} / {len(dictionary)}")
+        set_print(False)
         attempts.append(solve(dictionary.copy(), result_getter=lambda guess: get_result(target_word, guess)))
-    set_print(True)
+        set_print(True)
+    end = time.time()
+    print(f"Evaluation took {(end - start):.2f} seconds")
 
     success_rate = len([attempt for attempt in attempts if attempt <= 6]) / len(attempts) * 100
     avg = statistics.mean(attempts)
     median = statistics.median(attempts)
     max_guesses = max(attempts)
+
+    set_print(False)
     first_guess = get_guess(dictionary)
+    set_print(True)
 
     print(f"Success rate: {success_rate:.2f}%")
     print(f"Average guesses: {avg:.2f}")
